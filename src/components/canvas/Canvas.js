@@ -4,13 +4,13 @@ import PropTypes from 'prop-types';
 import { fabric } from 'fabric';
 import uuid from 'uuid/v4';
 import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle';
 import 'mediaelement';
 import 'mediaelement/build/mediaelementplayer.min.css';
 import interact from 'interactjs';
 import anime from 'animejs';
 
 import CanvasObjects from './CanvasObjects';
-import OrthogonalLink from '../workflow/link/OrthogonalLink';
 import CurvedLink from '../workflow/link/CurvedLink';
 import Arrow from './Arrow';
 
@@ -138,7 +138,10 @@ class Canvas extends Component {
         this.workareaHandlers.init();
         this.canvas.renderAll();
         this.gridHandlers.init();
-        const { modified, moving, moved, scaling, rotating, mousewheel, mousedown, mousemove, mouseup, mouseout, selection, beforeRender, afterRender } = this.eventHandlers;
+        const { modified, moving, moved, scaling, rotating,
+            mousewheel, mousedown, mousemove, mouseup, mouseout,
+            selection, beforeRender, afterRender,
+        } = this.eventHandlers;
         if (editable) {
             this.transactionHandlers.init();
             this.interactionMode = 'selection';
@@ -183,30 +186,42 @@ class Canvas extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (JSON.stringify(this.props.canvasOption) !== JSON.stringify(prevProps.canvasOption)) {
-            const { canvasOption: { width: currentWidth, height: currentHeight } } = this.props;
-            const { canvasOption: { width: prevWidth, height: prevHeight } } = prevProps;
+        const {
+            canvasOption: prevCanvasOption,
+            keyEvent: prevKeyEvent,
+            fabricObjects: prevFabricObjects,
+            workareaOption: prevWorkareaOption,
+            guidelineOption: prevGuidelineOption,
+        } = prevProps;
+        const {
+            canvasOption: currCanvasOption,
+            keyEvent: currKeyEvent,
+            fabricObjects: currFabricObjects,
+            workareaOption: currWorkareaOption,
+            guidelineOption: currGuidelineOption,
+        } = this.props;
+        if (JSON.stringify(currCanvasOption) !== JSON.stringify(prevCanvasOption)) {
+            const { width: currentWidth, height: currentHeight, backgroundColor, selection } = currCanvasOption;
+            const { width: prevWidth, height: prevHeight } = prevCanvasOption;
             if (currentWidth !== prevWidth || currentHeight !== prevHeight) {
                 this.eventHandlers.resize(prevWidth, prevHeight, currentWidth, currentHeight);
             }
-            this.canvas.setBackgroundColor(this.props.canvasOption.backgroundColor, this.canvas.renderAll.bind(this.canvas));
-            if (typeof this.props.canvasOption.selection === 'undefined') {
+            this.canvas.setBackgroundColor(backgroundColor, this.canvas.renderAll.bind(this.canvas));
+            if (typeof selection === 'undefined') {
                 this.canvas.selection = true;
             } else {
-                this.canvas.selection = this.props.canvasOption.selection;
+                this.canvas.selection = selection;
             }
         }
-        if (JSON.stringify(this.props.keyEvent) !== JSON.stringify(prevProps.keyEvent)) {
-            this.keyEvent = Object.assign({}, defaultKeyboardEvent, this.props.keyEvent);
+        if (JSON.stringify(currKeyEvent) !== JSON.stringify(prevKeyEvent)) {
+            this.keyEvent = Object.assign({}, defaultKeyboardEvent, currKeyEvent);
         }
-        if (JSON.stringify(this.props.fabricObjects) !== JSON.stringify(prevProps.fabricObjects)) {
-            this.fabricObjects = CanvasObjects(this.props.fabricObjects);
-        } else if (JSON.stringify(this.props.workareaOption) !== JSON.stringify(prevProps.workareaOption)) {
-            this.workarea.set({
-                ...this.props.workareaOption,
-            });
-        } else if (JSON.stringify(this.props.guidelineOption) !== JSON.stringify(prevProps.guidelineOption)) {
-            if (this.props.guidelineOption.enabled) {
+        if (JSON.stringify(currFabricObjects) !== JSON.stringify(prevFabricObjects)) {
+            this.fabricObjects = CanvasObjects(currFabricObjects);
+        } else if (JSON.stringify(currWorkareaOption) !== JSON.stringify(prevWorkareaOption)) {
+            this.workarea.set(currWorkareaOption);
+        } else if (JSON.stringify(currGuidelineOption) !== JSON.stringify(prevGuidelineOption)) {
+            if (currGuidelineOption.enabled) {
                 this.canvas.on({
                     'before:render': this.eventHandlers.beforeRender,
                     'after:render': this.eventHandlers.afterRender,
@@ -353,6 +368,7 @@ class Canvas extends Component {
                 }
                 const { onAdd } = this.props;
                 if (onAdd && editable && !loaded) {
+                    this.transactionHandlers.save(createdObj, 'add');
                     onAdd(createdObj);
                 }
                 return createdObj;
@@ -401,6 +417,7 @@ class Canvas extends Component {
             }
             const { onAdd, gridOption } = this.props;
             if (onAdd && editable && !loaded) {
+                this.transactionHandlers.save(createdObj, 'add');
                 onAdd(createdObj);
             }
             if (!loaded) {
@@ -445,6 +462,7 @@ class Canvas extends Component {
                 }
                 const { onAdd } = this.props;
                 if (onAdd && editable && !loaded) {
+                    this.transactionHandlers.save(createdObj, 'add');
                     onAdd(createdObj);
                 }
             };
@@ -494,6 +512,7 @@ class Canvas extends Component {
             }
             const { onAdd } = this.props;
             if (onAdd && editable && !loaded) {
+                this.transactionHandlers.save(createdObj, 'add');
                 onAdd(createdObj);
             }
         },
@@ -517,6 +536,7 @@ class Canvas extends Component {
                     this.animationHandlers.play(createdObj.id);
                 }
                 if (onAdd && !loaded && editable) {
+                    this.transactionHandlers.save(createdObj, 'add');
                     onAdd(obj);
                 }
             };
@@ -531,12 +551,12 @@ class Canvas extends Component {
             }
         },
         /**
-         * Remove object
-         *
-         * @param {fabric.Object} target
-         * @returns {any}
+         * @description Remove object
+         * @param {fabric.Object} [target]
+         * @param {boolean} [transaction=false]
+         * @returns
          */
-        remove: (target) => {
+        remove: (target, transaction = false) => {
             const activeObject = target || this.canvas.getActiveObject();
             if (this.prevTarget && this.prevTarget.superType === 'link') {
                 this.linkHandlers.remove(this.prevTarget);
@@ -547,6 +567,9 @@ class Canvas extends Component {
             }
             if (typeof activeObject.deleted !== 'undefined' && !activeObject.deleted) {
                 return false;
+            }
+            if (transaction) {
+                this.transactionHandlers.save(activeObject, 'remove');
             }
             if (activeObject.type !== 'activeSelection') {
                 this.canvas.discardActiveObject();
@@ -620,10 +643,15 @@ class Canvas extends Component {
                 onRemove(activeObject);
             }
         },
-        removeById: (id) => {
+        /**
+         * @description Remove object by id
+         * @param {string} id
+         * @param {boolean} [transaction=false]
+         */
+        removeById: (id, transaction = false) => {
             const findObject = this.handlers.findById(id);
             if (findObject) {
-                this.handlers.remove(findObject);
+                this.handlers.remove(findObject, transaction);
             }
         },
         duplicate: () => {
@@ -1190,15 +1218,6 @@ class Canvas extends Component {
                     if (obj.id === 'workarea') {
                         return;
                     }
-                    // if (workareaExist.length && obj.id === 'workarea') {
-                    //     prevLeft = obj.left;
-                    //     prevTop = obj.top;
-                    //     this.workarea.set(obj);
-                    //     this.canvas.centerObject(this.workarea);
-                    //     this.workareaHandlers.setImage(obj.src, true);
-                    //     this.workarea.setCoords();
-                    //     return;
-                    // }
                     const canvasWidth = this.canvas.getWidth();
                     const canvasHeight = this.canvas.getHeight();
                     const { width, height, scaleX, scaleY, layout, left, top } = this.workarea;
@@ -2902,6 +2921,10 @@ class Canvas extends Component {
                 });
             }
         },
+        /**
+         * @description Set coords of target object ports
+         * @param {fabric.Object} target
+         */
         setCoords: (target) => {
             if (target.toPort) {
                 const toCoords = {
@@ -3035,15 +3058,21 @@ class Canvas extends Component {
             this.linkHandlers.finish();
         },
         create: (link, init = false) => {
-            const fromNode = this.handlers.findById(link.fromNode);
+            let { fromNode, toNode } = link;
+            if (!(fromNode instanceof fabric.Object)) {
+                fromNode = this.handlers.findById(link.fromNode);
+            }
             const fromPort = fromNode.fromPort.filter(port => port.id === link.fromPort || !port.id)[0];
-            const toNode = this.handlers.findById(link.toNode);
+            if (!(toNode instanceof fabric.Object)) {
+                toNode = this.handlers.findById(link.toNode);
+            }
             const { toPort } = toNode;
             const createdObj = this.fabricObjects[link.type].create(fromNode, fromPort, toNode, toPort, { ...link });
             this.canvas.add(createdObj);
             this.objects = this.handlers.getObjects();
             const { onAdd } = this.props;
             if (onAdd && this.props.editable && init) {
+                this.transactionHandlers.save(createdObj, 'add');
                 onAdd(createdObj);
             }
             this.canvas.renderAll();
@@ -4038,12 +4067,15 @@ class Canvas extends Component {
             },
         },
         modified: (opt) => {
-            const { target } = opt;
+            const { target, transform } = opt;
             if (!target) {
                 return;
             }
             if (target.type === 'circle' && target.parentId) {
                 return;
+            }
+            if (transform) {
+                this.transactionHandlers.save(opt, transform.action);
             }
             const { onModified } = this.props;
             if (onModified) {
@@ -4504,7 +4536,7 @@ class Canvas extends Component {
                                 this.handlers.copy();
                             }
                         } catch (error) {
-                            console.log(error);
+                            console.error(error);
                             // const item = {
                             //     id: uuid(),
                             //     type: 'textbox',
@@ -4579,7 +4611,7 @@ class Canvas extends Component {
             }
             if (editable) {
                 if (e.keyCode === 46 && del) {
-                    this.handlers.remove();
+                    this.handlers.remove(null, true);
                 } else if (e.code.includes('Arrow') && move) {
                     this.eventHandlers.arrowmoving(e);
                 } else if (e.ctrlKey && e.keyCode === 65 && all) {
@@ -4594,7 +4626,7 @@ class Canvas extends Component {
                 } else if (e.keyCode === 90 && transaction) {
                     e.preventDefault();
                     this.transactionHandlers.undo();
-                } else if (e.keyCode === 88 && transaction) {
+                } else if (e.keyCode === 89 && transaction) {
                     e.preventDefault();
                     this.transactionHandlers.redo();
                 }
@@ -4628,18 +4660,16 @@ class Canvas extends Component {
 
     transactionHandlers = {
         /**
-         * Transaction init function
-         *
+         * @description Transaction init function
          */
         init: () => {
             this.redos = [];
             this.undos = [];
         },
         /**
-         * Transaction save function
-         * 
-         * @param {fabric.Object} target
-         * @param {'add' | 'remove' | 'moved' | 'scaled' | 'rotated' | 'skewed'} type
+         * @description Transaction save function
+         * @param {fabric.Object | fabric.IEvent} target
+         * @param {'add' | 'remove' | 'drag' | 'scale' | 'rotate' | 'skew'} type
          * @returns {boolean}
          */
         save: (target, type) => {
@@ -4648,48 +4678,31 @@ class Canvas extends Component {
                 return false;
             }
             const { propertiesToInclude } = this.props;
-            const undo = { type };
-            if (target.superType === 'node') {
-                undo.target = {
-                    id: target.id,
-                    name: target.name,
-                    description: target.description,
-                    superType: target.superType,
-                    type: target.type,
-                    nodeClazz: target.nodeClazz,
-                    configuration: target.configuration,
-                    properties: {
-                        left: target.left || 0,
-                        top: target.top || 0,
-                        iconName: target.descriptor.icon,
-                    },
-                };
-            } else if (target.superType === 'link') {
-                undo.target = {
-                    id: target.id,
-                    type: target.type,
-                    superType: target.superType,
-                    fromNode: target.fromNode.id,
-                    fromPort: target.fromPort,
-                    toNode: target.toNode.id,
-                };
-            } else if (target.type === 'activeSelection') {
-
-            } else {
-
+            let obj = target;
+            let original;
+            if (target.transform && typeof target.transform !== 'function') {
+                obj = obj.target;
+                original = target.transform.original;
             }
+            const undo = {
+                type,
+                target: obj.toObject(propertiesToInclude),
+                original,
+            };
             this.undos.push(undo);
         },
         /**
-         * Transaction undo function
+         * @description Transaction undo function
          * @returns {any}
          */
-        undo: () => {
-            const undo = this.undos.pop();
+        undo: throttle(() => {
+            let undo = this.undos.pop();
+            console.debug(undo);
             if (!undo) {
                 return false;
             }
-            const { target, type } = undo;
+            // TODO... ActiveSelection
+            const { target, type, original } = undo;
             if (type === 'add') {
                 if (target.superType === 'link') {
                     const findObject = this.handlers.findById(target.id);
@@ -4698,61 +4711,79 @@ class Canvas extends Component {
                     this.handlers.removeById(target.id);
                 }
             } else if (type === 'remove') {
+                this.handlers.add(target, false, true);
+            } else if (original) {
+                const findObject = this.handlers.findById(target.id);
+                this.handlers.setByPartial(findObject, original);
                 if (target.superType === 'node') {
-                    target.left = target.properties.left;
-                    target.top = target.properties.top;
+                    this.portHandlers.setCoords(findObject);
+                    this.canvas.requestRenderAll();
                 }
-                this.handlers.add({ ...target, id: null }, false, true);
-            } else if (type === 'moved') {
-                
-            } else if (type === 'scaled') {
-                
-            } else if (type === 'rotated') {
-                
-            } else if (type === 'skewed') {
-                
+                undo = {
+                    type,
+                    original: {
+                        left: target.left,
+                        top: target.top,
+                        scaleX: target.scaleX,
+                        scaleY: target.scaleY,
+                        angle: target.angle,
+                        skewX: target.skewX,
+                        skewY: target.skewY,
+                    },
+                    target: { ...target, ...original },
+                };
+            } else {
+                return;
             }
             this.redos.push(undo);
             return undo;
-        },
+        }, 200),
         /**
-         * Transaction redo function
+         * @description Transaction redo function
          * @returns {any}
          */
-        redo: () => {
-            const redo = this.redos.pop();
+        redo: throttle(() => {
+            let redo = this.redos.pop();
+            console.debug(redo);
             if (!redo) {
                 return false;
             }
-            const { target, type } = redo;
+            const { target, type, original } = redo;
             if (type === 'add') {
+                this.handlers.add(target, false, true);
+            } else if (type === 'remove') {
                 if (target.superType === 'link') {
-                    this.linkHandlers.remove(target);
+                    const findObject = this.handlers.findById(target.id);
+                    this.linkHandlers.remove(findObject);
                 } else {
                     this.handlers.removeById(target.id);
                 }
-                this.redos.push({
-                    target,
-                    type: 'remove',
-                });
-            } else if (type === 'remove') {
-                if (target.superType === 'link') {
-                    
-                } else {
-                    
+            } else if (original) {
+                const findObject = this.handlers.findById(target.id);
+                this.handlers.setByPartial(findObject, original);
+                if (target.superType === 'node') {
+                    this.portHandlers.setCoords(findObject);
+                    this.canvas.requestRenderAll();
                 }
-            } else if (type === 'moved') {
-                
-            } else if (type === 'scaled') {
-                
-            } else if (type === 'rotated') {
-                
-            } else if (type === 'skewed') {
-                
+                redo = {
+                    type,
+                    original: {
+                        left: target.left,
+                        top: target.top,
+                        scaleX: target.scaleX,
+                        scaleY: target.scaleY,
+                        angle: target.angle,
+                        skewX: target.skewX,
+                        skewY: target.skewY,
+                    },
+                    target: { ...target, ...original },
+                };
+            } else {
+                return;
             }
             this.undos.push(redo);
             return redo;
-        },
+        }, 200),
     }
 
     render() {

@@ -92,7 +92,7 @@ class CanvasList extends Component {
                                 <Button className="rde-action-btn" shape="circle" disabled={idCropping} onClick={(e) => { e.stopPropagation(); canvasRef.handlers.duplicateById(obj.id); }}>
                                     <Icon name="clone" />
                                 </Button>
-                                <Button className="rde-action-btn" shape="circle" disabled={idCropping} onClick={(e) => { e.stopPropagation(); canvasRef.handlers.removeById(obj.id); }}>
+                                <Button className="rde-action-btn" shape="circle" disabled={idCropping} onClick={(e) => { e.stopPropagation(); canvasRef.handlers.removeById(obj.id, true); }}>
                                     <Icon name="trash" />
                                 </Button>
                             </FlexBox>

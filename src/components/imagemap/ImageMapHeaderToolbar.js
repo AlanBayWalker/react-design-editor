@@ -155,7 +155,7 @@ class ImageMapHeaderToolbar extends Component {
                         className="rde-action-btn"
                         shape="circle"
                         disabled={isCropping}
-                        onClick={() => canvasRef.handlers.remove()}
+                        onClick={() => canvasRef.handlers.remove(null, true)}
                         icon="trash"
                         tooltipTitle={i18n.t('action.delete')}
                     />

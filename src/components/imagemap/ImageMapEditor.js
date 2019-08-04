@@ -178,7 +178,6 @@ class ImageMapEditor extends Component {
             && target.id
             && target.id !== 'workarea'
             && target.type !== 'activeSelection') {
-                this.canvasRef.transactionHandlers.save(target, 'modified');
                 this.setState({
                     selectedItem: target,
                 });
@@ -205,7 +204,6 @@ class ImageMapEditor extends Component {
             }
             if (changedKey === 'width' || changedKey === 'height') {
                 this.canvasRef.handlers.scaleToResize(allValues.width, allValues.height);
-                this.canvasRef.transactionHandlers.save(selectedItem, 'modified');
                 return;
             }
             if (changedKey === 'lock') {

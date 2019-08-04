@@ -34,7 +34,8 @@
               "ignore": [ "src/" ]
             }
         ],
-        "react/sort-comp": false
+        "react/sort-comp": false,
+        "no-console": ["error", { "allow": ["debug", "warn", "error"] }]
     },
     "env": {
         "browser": true,

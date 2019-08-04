@@ -166,7 +166,9 @@ class WorkflowEditor extends Component {
             const workflow = this.handlers.exportJsonCode();
             if (workflow) {
                 const anchorEl = document.createElement('a');
-                anchorEl.href = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(workflow, null, '\t'))}`;
+                anchorEl.href = `data:text/json;charset=utf-8,${
+                    encodeURIComponent(JSON.stringify(workflow, null, '\t'))
+                }`;
                 anchorEl.download = `${workflow.name}.json`;
                 document.body.appendChild(anchorEl); // required for firefox
                 anchorEl.click();
@@ -182,7 +184,11 @@ class WorkflowEditor extends Component {
                 this.canvasRef.handlers.getObjects().forEach((obj) => {
                     if (obj.superType === 'node') {
                         if (obj.errorFlag.visible) {
-                            throw new NodeConfigurationError(i18n.t('workflow.validate-fields-error'), obj.id, obj.name);
+                            throw new NodeConfigurationError(
+                                i18n.t('workflow.validate-fields-error'),
+                                obj.id,
+                                obj.name,
+                            );
                         }
                         const node = {
                             id: obj.id,
@@ -236,7 +242,9 @@ class WorkflowEditor extends Component {
             } else {
                 setTimeout(() => {
                     const configurationList = Object.keys(allValues.configuration).map(key => `configuration.${key}`);
-                    const errors = this.nodeConfigurationRef.props.form.getFieldsError(configurationList.concat(['name']));
+                    const errors = this.nodeConfigurationRef.props.form.getFieldsError(
+                        configurationList.concat(['name']),
+                    );
                     if (Object.values(errors.configuration).filter(error => error).length || errors.name) {
                         selectedItem.setErrors(true);
                     } else {
@@ -373,7 +381,7 @@ class WorkflowEditor extends Component {
                         onAdd={onAdd}
                         onRemove={onRemove}
                         onModified={onModified}
-                        keyEvent={{ move: false, transaction: false, clipboard: true }}
+                        keyEvent={{ move: false, clipboard: true }}
                     />
                     <div className="rde-editor-properties" style={{ display: selectedItem ? 'block' : 'none' }}>
                         <WorkflowNodeConfigurations
