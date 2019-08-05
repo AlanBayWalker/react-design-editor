@@ -64,9 +64,7 @@ class InputJson extends Component {
 
     onValidate = (annotations) => {
         if (annotations.length) {
-            const errors = annotations.filter(annotation => annotation.type === 'error').map((annotation) => {
-                return new Error(`${annotation.row}:${annotation.column} ${annotation.text} error`);
-            });
+            const errors = annotations.filter(annotation => annotation.type === 'error').map((annotation) => new Error(`${annotation.row}:${annotation.column} ${annotation.text} error`));
             this.debouncedValidate(errors);
         }
     }

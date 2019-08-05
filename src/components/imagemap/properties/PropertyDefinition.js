@@ -9,7 +9,6 @@ import LinkProperty from './LinkProperty';
 import AnimationProperty from './AnimationProperty';
 import ShadowProperty from './ShadowProperty';
 import UserProperty from './UserProperty';
-import TriggerProperty from './TriggerProperty';
 
 export default {
     map: {
@@ -61,10 +60,6 @@ export default {
             title: 'Animation',
             component: AnimationProperty,
         },
-        trigger: {
-            title: 'Trigger',
-            component: TriggerProperty,
-        },
         userProperty: {
             title: 'User Property',
             component: UserProperty,
@@ -98,10 +93,6 @@ export default {
         animation: {
             title: 'Animation',
             component: AnimationProperty,
-        },
-        trigger: {
-            title: 'Trigger',
-            component: TriggerProperty,
         },
         userProperty: {
             title: 'User Property',

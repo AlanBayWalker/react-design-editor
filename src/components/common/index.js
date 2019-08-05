@@ -1,5 +1,3 @@
-export { default as CodeModal } from './CodeModal';
-
 export { default as ColorPicker } from './ColorPicker';
 
 export { default as CommonButton } from './CommonButton';
