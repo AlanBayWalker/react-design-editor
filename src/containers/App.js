@@ -1,9 +1,5 @@
 import React, { Component } from 'react';
-import { Helmet } from 'react-helmet';
-
 import ImageMapEditor from '../components/imagemap/ImageMapEditor';
-import WorkflowEditor from '../components/workflow/WorkflowEditor';
-import Title from './Title';
 
 class App extends Component {
     state = {
@@ -20,7 +16,7 @@ class App extends Component {
         const { current } = this.state;
         return (
             <div className="rde-main">
-                <Helmet>
+                <head>
                     <meta charSet="utf-8" />
                     <meta name="viewport" content="width=device-width, initial-scale=0.1" />
                     <meta name="description" content="React Design Editor has started to developed direct manipulation of editable design tools like Powerpoint, We've developed it with react.js, ant.design, fabric.js " />
@@ -38,18 +34,9 @@ class App extends Component {
                         `}
                     </script>
                     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" />
-                </Helmet>
-                <div className="rde-title">
-                    <Title onChangeMenu={this.onChangeMenu} current={current} />
-                </div>
+                </head>
                 <div className="rde-content">
-                    {
-                        current === 'imagemap' ? (
-                            <ImageMapEditor />
-                        ) : (
-                            <WorkflowEditor />
-                        )
-                    }
+                    <ImageMapEditor />
                 </div>
             </div>
         );
