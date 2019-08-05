@@ -1,6 +1,5 @@
 import { fabric } from 'fabric';
 import uuidv4 from 'uuid/v4';
-import { OUT_PORT_TYPE } from '../constant/constants';
 
 const Link = fabric.util.createClass(fabric.Line, {
     type: 'link',
@@ -40,7 +39,7 @@ const Link = fabric.util.createClass(fabric.Line, {
         this.setPortEnabled(fromNode, fromPort, false);
     },
     setPortEnabled(node, port, enabled) {
-        if (node.descriptor.outPortType !== OUT_PORT_TYPE.BROADCAST) {
+        if (node.descriptor.outPortType !== 'BROADCAST') {
             port.set({
                 enabled,
             });

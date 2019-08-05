@@ -1,11 +1,8 @@
 import React, { Component } from 'react';
 import { ResizeSensor } from 'css-element-queries';
-import { Badge, Button, Spin, Popconfirm, Menu, Modal } from 'antd';
+import { Badge, Button, Spin, Popconfirm, Menu } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
-import storage from 'store/storages/localStorage';
-
-import Wireframe from '../wireframe/Wireframe';
 import Canvas from '../canvas/Canvas';
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -13,7 +10,6 @@ import ImageMapTitle from './ImageMapTitle';
 import ImageMapHeaderToolbar from './ImageMapHeaderToolbar';
 import ImageMapPreview from './ImageMapPreview';
 import ImageMapConfigurations from './ImageMapConfigurations';
-import SandBox from '../sandbox/SandBox';
 
 import '../../libs/fontawesome-5.2.0/css/all.css';
 import '../../styles/index.less';
@@ -421,7 +417,7 @@ class ImageMapEditor extends Component {
                 setTimeout(() => {
                     const reader = new FileReader();
                     reader.onprogress = (e) => {
-                        if (e.lengthComputable) {                                            
+                        if (e.lengthComputable) {
                             const progress = parseInt(((e.loaded / e.total) * 100), 10);
                             this.handlers.onProgress(progress);
                         }
@@ -518,9 +514,7 @@ class ImageMapEditor extends Component {
         },
     }
 
-    transformList = () => {
-        return Object.values(this.state.descriptors).reduce((prev, curr) => prev.concat(curr), []);
-    }
+    transformList = () => Object.values(this.state.descriptors).reduce((prev, curr) => prev.concat(curr), [])
 
     showLoading = (loading) => {
         this.setState({

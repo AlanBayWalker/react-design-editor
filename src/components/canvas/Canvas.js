@@ -10,7 +10,6 @@ import interact from 'interactjs';
 import anime from 'animejs';
 
 import CanvasObjects from './CanvasObjects';
-import OrthogonalLink from '../workflow/link/OrthogonalLink';
 import CurvedLink from '../workflow/link/CurvedLink';
 import Arrow from './Arrow';
 
