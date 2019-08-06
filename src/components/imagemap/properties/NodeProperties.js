@@ -30,23 +30,11 @@ class NodeProperties extends Component {
                 <Form layout="horizontal">
                     <Collapse bordered={false}>
                         {
-                            selectedItem && PropertyDefinition[selectedItem.type] ? (
-                                Object.keys(PropertyDefinition[selectedItem.type]).map((key) => {
-                                    return (
-                                        <Panel key={key} header={PropertyDefinition[selectedItem.type][key].title} showArrow={showArrow}>
-                                            {PropertyDefinition[selectedItem.type][key].component.render(canvasRef, form, selectedItem)}
-                                        </Panel>
-                                    );
-                                })
-                            ) : (
-                                <FlexBox
-                                    justifyContent="center"
-                                    alignItems="center"
-                                    style={{ width: '100%', height: '100%', color: 'rgba(0, 0, 0, 0.45)', fontSie: 16, padding: 16 }}
-                                >
-                                    <List />
-                                </FlexBox>
-                            )
+                            Object.keys(PropertyDefinition[selectedItem.type]).map(key => (
+                                <Panel key={key} header={PropertyDefinition[selectedItem.type][key].title} showArrow={showArrow}>
+                                    {PropertyDefinition[selectedItem.type][key].component.render(canvasRef, form, selectedItem)}
+                                </Panel>
+                            ))
                         }
                     </Collapse>
                 </Form>

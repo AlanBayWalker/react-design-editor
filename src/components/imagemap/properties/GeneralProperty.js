@@ -1,10 +1,11 @@
 import React from 'react';
-import { Form, Input, Slider, Switch, Col, InputNumber, Row } from 'antd';
+import { Form, Input, Switch, Col, InputNumber, Row } from 'antd';
 import i18n from 'i18next';
 
 export default {
     render(canvasRef, form, data) {
         const { getFieldDecorator } = form;
+
         return (
             <React.Fragment>
                 <Row>
@@ -116,20 +117,6 @@ export default {
                         </Form.Item>
                     </Col>
                 </Row>
-                <Form.Item label={i18n.t('common.angle')} colon={false}>
-                    {
-                        getFieldDecorator('angle', {
-                            rules: [{
-                                type: 'number',
-                                required: true,
-                                message: 'Please input rotation',
-                            }],
-                            initialValue: data.angle,
-                        })(
-                            <Slider min={0} max={360} />,
-                        )
-                    }
-                </Form.Item>
             </React.Fragment>
         );
     },

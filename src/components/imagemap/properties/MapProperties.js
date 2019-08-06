@@ -21,13 +21,11 @@ class MapProperties extends Component {
                     <Form layout="horizontal">
                         <Collapse bordered={false}>
                             {
-                                Object.keys(PropertyDefinition.map).map((key) => {
-                                    return (
+                                Object.keys(PropertyDefinition.map).map((key) => (
                                         <Panel key={key} header={PropertyDefinition.map[key].title} showArrow={showArrow}>
                                             {PropertyDefinition.map[key].component.render(canvasRef, form, canvasRef.workarea)}
                                         </Panel>
-                                    );
-                                })
+                                    ))
                             }
                         </Collapse>
                     </Form>

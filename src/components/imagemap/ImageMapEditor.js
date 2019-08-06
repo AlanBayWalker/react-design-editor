@@ -95,14 +95,6 @@ class ImageMapEditor extends Component {
     }
 
     componentDidMount() {
-        this.showLoading(true);
-        import('./Descriptors.json').then((descriptors) => {
-            this.setState({
-                descriptors,
-            }, () => {
-                this.showLoading(false);
-            });
-        });
         this.resizeSensor = new ResizeSensor(this.container, () => {
             const { canvasRect: currentCanvasRect } = this.state;
             const canvasRect = Object.assign({}, currentCanvasRect, {
