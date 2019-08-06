@@ -1,15 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Collapse, notification, Input, message } from 'antd';
+import { notification, message } from 'antd';
 import uuid from 'uuid/v4';
-import classnames from 'classnames';
-import i18n from 'i18next';
-
-import { FlexBox } from '../flex';
 import Icon from '../icon/Icon';
-import Scrollbar from '../common/Scrollbar';
-import CommonButton from '../common/CommonButton';
-import { SVGModal } from '../common';
 
 notification.config({
     top: 80,
@@ -38,9 +31,7 @@ class ImageMapItems extends Component {
 
     componentWillReceiveProps(nextProps) {
         if (JSON.stringify(this.props.descriptors) !== JSON.stringify(nextProps.descriptors)) {
-            const descriptors = Object.keys(nextProps.descriptors).reduce((prev, key) => {
-                return prev.concat(nextProps.descriptors[key]);
-            }, []);
+            const descriptors = Object.keys(nextProps.descriptors).reduce((prev, key) => prev.concat(nextProps.descriptors[key]), []);
             this.setState({
                 descriptors,
             });
@@ -50,15 +41,15 @@ class ImageMapItems extends Component {
     shouldComponentUpdate(nextProps, nextState) {
         if (JSON.stringify(this.state.descriptors) !== JSON.stringify(nextState.descriptors)) {
             return true;
-        } else if (JSON.stringify(this.state.filteredDescriptors) !== JSON.stringify(nextState.filteredDescriptors)) {
+        } if (JSON.stringify(this.state.filteredDescriptors) !== JSON.stringify(nextState.filteredDescriptors)) {
             return true;
-        } else if (this.state.textSearch !== nextState.textSearch) {
+        } if (this.state.textSearch !== nextState.textSearch) {
             return true;
-        } else if (JSON.stringify(this.state.activeKey) !== JSON.stringify(nextState.activeKey)) {
+        } if (JSON.stringify(this.state.activeKey) !== JSON.stringify(nextState.activeKey)) {
             return true;
-        } else if (this.state.collapse !== nextState.collapse) {
+        } if (this.state.collapse !== nextState.collapse) {
             return true;
-        } else if (this.state.svgModalVisible !== nextState.svgModalVisible) {
+        } if (this.state.svgModalVisible !== nextState.svgModalVisible) {
             return true;
         }
         return false;
@@ -117,53 +108,6 @@ class ImageMapItems extends Component {
                 return;
             }
             canvasRef.handlers.add(option, centered);
-        },
-        onAddSVG: (option, centered) => {
-            const { canvasRef } = this.props;
-            canvasRef.handlers.add({ ...option, type: 'svg', id: uuid(), name: 'New SVG' }, centered);
-            this.handlers.onSVGModalVisible();
-        },
-        onDrawingItem: (item) => {
-            const { canvasRef } = this.props;
-            if (canvasRef.workarea.layout === 'responsive') {
-                if (!canvasRef.workarea.isElement) {
-                    notification.warn({
-                        message: 'Please your select background image',
-                    });
-                    return;
-                }
-            }
-            if (canvasRef.interactionMode === 'polygon') {
-                message.info('Already drawing');
-                return;
-            }
-            if (item.option.type === 'line') {
-                canvasRef.drawingHandlers.line.init();
-            } else if (item.option.type === 'arrow') {
-                canvasRef.drawingHandlers.arrow.init();
-            } else {
-                canvasRef.drawingHandlers.polygon.init();
-            }
-        },
-        onChangeActiveKey: (activeKey) => {
-            this.setState({
-                activeKey,
-            });
-        },
-        onCollapse: () => {
-            this.setState({
-                collapse: !this.state.collapse,
-            });
-        },
-        onSearchNode: (e) => {
-            const filteredDescriptors = this.handlers.transformList().filter(descriptor => descriptor.name.toLowerCase().includes(e.target.value.toLowerCase()));
-            this.setState({
-                textSearch: e.target.value,
-                filteredDescriptors,
-            });
-        },
-        transformList: () => {
-            return Object.values(this.props.descriptors).reduce((prev, curr) => prev.concat(curr), []);
         },
         onSVGModalVisible: () => {
             this.setState((prevState) => {
@@ -239,126 +183,40 @@ class ImageMapItems extends Component {
         },
     }
 
-    renderItems = items => (
-        <FlexBox flexWrap="wrap" flexDirection="column" style={{ width: '100%' }}>
-            {items.map(item => this.renderItem(item))}
-        </FlexBox>
-    )
+    render() {
+        const item = {
+            name: 'Not Text',
+            description: '',
+            type: 'text',
+            icon: {
+                prefix: 'fas',
+                name: 'font',
+            },
+            option: {
+                type: 'textbox',
+                text: '',
+                width: 60,
+                height: 30,
+                fontSize: 32,
+                name: 'New text',
+            },
+        };
+        const centered = true;
 
-    renderItem = (item, centered) => (
-        item.type === 'drawing' ? (
+        return (
             <div
-                key={item.name}
-                draggable
-                onClick={e => this.handlers.onDrawingItem(item)}
-                className="rde-editor-items-item"
-                style={{ justifyContent: this.state.collapse ? 'center' : null }}
-            >
-                <span className="rde-editor-items-item-icon">
-                    <Icon name={item.icon.name} prefix={item.icon.prefix} style={item.icon.style} />
-                </span>
-                {
-                    this.state.collapse ? null : (
-                        <div className="rde-editor-items-item-text">
-                            {item.name}
-                        </div>
-                    )
-                }
-            </div>
-        ) : (
-            <div
-                key={item.name}
                 draggable
                 onClick={e => this.handlers.onAddItem(item, centered)}
                 onDragStart={e => this.events.onDragStart(e, item)}
                 onDragEnd={e => this.events.onDragEnd(e, item)}
                 className="rde-editor-items-item"
-                style={{ justifyContent: this.state.collapse ? 'center' : null }}
             >
                 <span className="rde-editor-items-item-icon">
                     <Icon name={item.icon.name} prefix={item.icon.prefix} style={item.icon.style} />
                 </span>
-                {
-                    this.state.collapse ? null : (
-                        <div className="rde-editor-items-item-text">
-                            {item.name}
-                        </div>
-                    )
-                }
-            </div>
-        )
-    )
-
-    render() {
-        const { descriptors } = this.props;
-        const {
-            collapse,
-            textSearch,
-            filteredDescriptors,
-            activeKey,
-            svgModalVisible,
-            svgOption,
-        } = this.state;
-        const className = classnames('rde-editor-items', {
-            minimize: collapse,
-        });
-        return (
-            <div className={className}>
-                <FlexBox flex="1" flexDirection="column" style={{ height: '100%' }}>
-                    <FlexBox justifyContent="center" alignItems="center" style={{ height: 40 }}>
-                        <CommonButton
-                            icon={collapse ? 'angle-double-right' : 'angle-double-left'}
-                            shape="circle"
-                            className="rde-action-btn"
-                            style={{ margin: '0 4px' }}
-                            onClick={this.handlers.onCollapse}
-                        />
-                        {
-                            collapse ? null : (
-                                <Input
-                                    style={{ margin: '8px' }}
-                                    placeholder={i18n.t('action.search-list')}
-                                    onChange={this.handlers.onSearchNode}
-                                    value={textSearch}
-                                    allowClear
-                                />
-                            )
-                        }
-                    </FlexBox>
-                    <Scrollbar>
-                        <FlexBox flex="1" style={{ overflowY: 'hidden' }}>
-                            {
-                                (textSearch.length && this.renderItems(filteredDescriptors)) || (
-                                    collapse ? (
-                                        <FlexBox flexWrap="wrap" flexDirection="column" style={{ width: '100%' }} justifyContent="center">
-                                            {
-                                                this.handlers.transformList().map(item => (
-                                                    this.renderItem(item)
-                                                ))
-                                            }
-                                        </FlexBox>
-                                    ) : (
-                                        <Collapse style={{ width: '100%' }} bordered={false} activeKey={activeKey.length ? activeKey : Object.keys(descriptors)} onChange={this.handlers.onChangeActiveKey}>
-                                            {
-                                                Object.keys(descriptors).map(key => (
-                                                    <Collapse.Panel key={key} header={key} showArrow={!collapse}>
-                                                        {this.renderItems(descriptors[key])}
-                                                    </Collapse.Panel>
-                                                ))
-                                            }
-                                        </Collapse>
-                                    )
-                                )
-                            }
-                        </FlexBox>
-                    </Scrollbar>
-                </FlexBox>
-                <SVGModal
-                    visible={svgModalVisible}
-                    onOk={this.handlers.onAddSVG}
-                    onCancel={this.handlers.onSVGModalVisible}
-                    option={svgOption}
-                />
+                <div className="rde-editor-items-item-text">
+                    {item.name}
+                </div>
             </div>
         );
     }
