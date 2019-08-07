@@ -29,6 +29,8 @@
   },
   "homepage": "https://salgum1114.github.io/react-design-editor",
   "dependencies": {
+    "@material-ui/core": "^4.3.1",
+    "@material-ui/icons": "^4.2.1",
     "animejs": "^3.0.0",
     "antd": "3.15.0",
     "classnames": "^2.2.6",
@@ -41,7 +43,6 @@
     "mediaelement": "^4.2.9",
     "prop-types": "^15.6.2",
     "react": "^16.4.1",
-    "react-ace": "^6.1.4",
     "react-color": "^2.14.1",
     "react-custom-scrollbars": "^4.2.1",
     "react-dom": "^16.4.1",

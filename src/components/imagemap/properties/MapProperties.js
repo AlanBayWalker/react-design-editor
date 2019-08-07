@@ -1,11 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Collapse } from 'antd';
-
-import PropertyDefinition from './PropertyDefinition';
-import Scrollbar from '../../common/Scrollbar';
-
-const { Panel } = Collapse;
 
 class MapProperties extends Component {
     static propTypes = {
@@ -13,32 +7,64 @@ class MapProperties extends Component {
     }
 
     render() {
-        const { canvasRef, form } = this.props;
-        const showArrow = false;
+        const { onChange, selectedItem, canvasRef } = this.props;
+        const map = {
+            workarea: {
+                name: canvasRef ? canvasRef.workarea.name : null,
+                layout: canvasRef ? canvasRef.workarea.layout : null,
+                width: canvasRef ? canvasRef.workarea.width : null,
+                height: canvasRef ? canvasRef.workarea.height : null,
+            } };
+
+        const mapHandler = () => {
+            const change = {
+                width: 900,
+            };
+            const allData = { workarea: { ...map.workarea, width: 900 } };
+            onChange(selectedItem, change, allData);
+            console.log(selectedItem, change, allData, 'Makeshift');
+        };
+
+        const fileHandler = ({ currentTarget: { files } }) => {
+            const change = {
+                file: files[0],
+            };
+            const allData = {
+                workarea: {
+                    imageLoadType: 'file',
+                    file: null,
+                },
+            };
+            onChange(selectedItem, change, allData);
+            console.log(selectedItem, change, allData, 'Makeshift', files[0]);
+        };
+
+        const urlHandler = () => {
+            const change = {
+                src: 'https://images.freeimages.com/images/large-previews/478/jack-o-lanterns-1326113.jpg',
+            };
+            const allData = {
+                workarea: {
+                    imageLoadType: 'src',
+                    src: '',
+                    url: '',
+                },
+            };
+            onChange(selectedItem, change, allData);
+            console.log(selectedItem, change, allData, 'Makeshift');
+        };
+
         if (canvasRef) {
             return (
-                <Scrollbar>
-                    <Form layout="horizontal">
-                        <Collapse bordered={false}>
-                            {
-                                Object.keys(PropertyDefinition.map).map((key) => (
-                                        <Panel key={key} header={PropertyDefinition.map[key].title} showArrow={showArrow}>
-                                            {PropertyDefinition.map[key].component.render(canvasRef, form, canvasRef.workarea)}
-                                        </Panel>
-                                    ))
-                            }
-                        </Collapse>
-                    </Form>
-                </Scrollbar>
+                <>
+                    <div onClick={mapHandler}>Change Map</div>
+                    <div onClick={urlHandler}>Upload URL</div>
+                    <input onChange={fileHandler} type="file" name="fileToUpload" id="fileToUpload" />
+                </>
             );
         }
         return null;
     }
 }
 
-export default Form.create({
-    onValuesChange: (props, changedValues, allValues) => {
-        const { onChange, selectedItem } = props;
-        onChange(selectedItem, changedValues, { workarea: allValues });
-    },
-})(MapProperties);
+export default MapProperties;

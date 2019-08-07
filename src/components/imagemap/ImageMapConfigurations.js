@@ -1,10 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Tabs } from 'antd';
-
-import NodeProperties from './properties/NodeProperties';
-import MapProperties from './properties/MapProperties';
-import Icon from '../icon/Icon';
 
 class ImageMapConfigurations extends Component {
     static propTypes = {
@@ -13,44 +8,102 @@ class ImageMapConfigurations extends Component {
         onChange: PropTypes.func,
     }
 
-    state = {
-        activeKey: 'map',
-    }
-
-    handlers = {
-        onChangeTab: (activeKey) => {
-            this.setState({
-                activeKey,
-            });
-        },
-    }
-
     render() {
         const {
             onChange,
             selectedItem,
             canvasRef,
         } = this.props;
-        const { activeKey } = this.state;
-        const { onChangeTab } = this.handlers;
+
+        const map = {
+            workarea: {
+                name: canvasRef ? canvasRef.workarea.name : null,
+                layout: canvasRef ? canvasRef.workarea.layout : null,
+                width: canvasRef ? canvasRef.workarea.width : null,
+                height: canvasRef ? canvasRef.workarea.height : null,
+            },
+        };
+
+        const generalValues = {
+            height: selectedItem ? selectedItem.height : null,
+            left: selectedItem ? selectedItem.left : null,
+            lock: selectedItem ? selectedItem.lock : null,
+            name: selectedItem ? selectedItem.name : null,
+            top: selectedItem ? selectedItem.top : null,
+            visible: selectedItem ? selectedItem.visible : null,
+            width: selectedItem ? selectedItem.width : null,
+        };
+        const textValues = {
+            charSpacing: selectedItem ? selectedItem.charSpacing : null,
+            fontFamily: selectedItem ? selectedItem.fontFamily : null,
+            fontSize: selectedItem ? selectedItem.fontSize : null,
+            fontStyle: selectedItem ? selectedItem.fontStyle : null,
+            fontWeight: selectedItem ? selectedItem.fontWeight : null,
+            lineHeight: selectedItem ? selectedItem.lineHeight : null,
+            linethrough: selectedItem ? selectedItem.linethrough : null,
+            textAlign: selectedItem ? selectedItem.textAlign : null,
+            underline: selectedItem ? selectedItem.underline : null,
+        };
+        const styleValues = {
+            fill: selectedItem ? selectedItem.fill : null,
+            opacity: selectedItem ? selectedItem.opacity : null,
+            stroke: selectedItem ? selectedItem.stroke : null,
+            strokeWidth: selectedItem ? selectedItem.strokeWidth : null,
+        };
+
+        const mapHandler = () => {
+            const change = {
+                width: 900,
+            };
+            const allData = { workarea: { ...map.workarea, width: 900 } };
+            onChange(selectedItem, change, allData);
+            console.log(selectedItem, change, allData, 'Makeshift');
+        };
+
+        const fileHandler = ({ currentTarget: { files } }) => {
+            const change = {
+                file: files[0],
+            };
+            const allData = {
+                workarea: {
+                    imageLoadType: 'file',
+                    file: null,
+                },
+            };
+            onChange(selectedItem, change, allData);
+            console.log(selectedItem, change, allData, 'Makeshift', files[0]);
+        };
+
+        const urlHandler = () => {
+            const change = {
+                src: 'https://images.freeimages.com/images/large-previews/478/jack-o-lanterns-1326113.jpg',
+            };
+            const allData = {
+                workarea: {
+                    imageLoadType: 'src',
+                    src: '',
+                    url: '',
+                },
+            };
+            onChange(selectedItem, change, allData);
+            console.log(selectedItem, change, allData, 'Makeshift');
+        };
+
+        const textHandler = () => {
+            const change = {
+                opacity: 0.2,
+            };
+            onChange(selectedItem, change, styleValues);
+        };
 
         return (
-            <div className="rde-editor-configurations">
-                <Tabs
-                    tabPosition="right"
-                    style={{ height: '100%' }}
-                    activeKey={activeKey}
-                    onChange={onChangeTab}
-                    tabBarStyle={{ marginTop: 60 }}
-                >
-                    <Tabs.TabPane tab={<Icon name="cog" />} key="map">
-                        <MapProperties onChange={onChange} canvasRef={canvasRef} />
-                    </Tabs.TabPane>
-                    <Tabs.TabPane tab={<Icon name="cogs" />} key="node">
-                        <NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />
-                    </Tabs.TabPane>
-                </Tabs>
-            </div>
+            <>
+                <button onClick={mapHandler}>Change Map</button>
+                <button onClick={urlHandler}>Upload URL</button>
+                <input onChange={fileHandler} type="file" name="fileToUpload" id="fileToUpload" />
+
+                <button onClick={textHandler}>Change Text</button>
+            </>
         );
     }
 }
