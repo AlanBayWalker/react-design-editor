@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { notification, message } from 'antd';
 import uuid from 'uuid/v4';
-import Icon from '../icon/Icon';
 
 notification.config({
     top: 80,
@@ -12,47 +11,11 @@ notification.config({
 class ImageMapItems extends Component {
     static propTypes = {
         canvasRef: PropTypes.any,
-        descriptors: PropTypes.object,
-    }
-
-    state = {
-        activeKey: [],
-        collapse: false,
-        textSearch: '',
-        descriptors: {},
-        filteredDescriptors: [],
-        svgModalVisible: false,
     }
 
     componentDidMount() {
         const { canvasRef } = this.props;
         this.waitForCanvasRender(canvasRef);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (JSON.stringify(this.props.descriptors) !== JSON.stringify(nextProps.descriptors)) {
-            const descriptors = Object.keys(nextProps.descriptors).reduce((prev, key) => prev.concat(nextProps.descriptors[key]), []);
-            this.setState({
-                descriptors,
-            });
-        }
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        if (JSON.stringify(this.state.descriptors) !== JSON.stringify(nextState.descriptors)) {
-            return true;
-        } if (JSON.stringify(this.state.filteredDescriptors) !== JSON.stringify(nextState.filteredDescriptors)) {
-            return true;
-        } if (this.state.textSearch !== nextState.textSearch) {
-            return true;
-        } if (JSON.stringify(this.state.activeKey) !== JSON.stringify(nextState.activeKey)) {
-            return true;
-        } if (this.state.collapse !== nextState.collapse) {
-            return true;
-        } if (this.state.svgModalVisible !== nextState.svgModalVisible) {
-            return true;
-        }
-        return false;
     }
 
     componentWillUnmount() {
@@ -108,13 +71,6 @@ class ImageMapItems extends Component {
                 return;
             }
             canvasRef.handlers.add(option, centered);
-        },
-        onSVGModalVisible: () => {
-            this.setState((prevState) => {
-                return {
-                    svgModalVisible: !prevState.svgModalVisible,
-                };
-            });
         },
     }
 
@@ -185,7 +141,7 @@ class ImageMapItems extends Component {
 
     render() {
         const item = {
-            name: 'Not Text',
+            name: 'Text',
             description: '',
             type: 'text',
             icon: {
@@ -211,9 +167,6 @@ class ImageMapItems extends Component {
                 onDragEnd={e => this.events.onDragEnd(e, item)}
                 className="rde-editor-items-item"
             >
-                <span className="rde-editor-items-item-icon">
-                    <Icon name={item.icon.name} prefix={item.icon.prefix} style={item.icon.style} />
-                </span>
                 <div className="rde-editor-items-item-text">
                     {item.name}
                 </div>
